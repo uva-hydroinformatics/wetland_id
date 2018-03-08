@@ -14,6 +14,23 @@ from sklearn.metrics import accuracy_score, confusion_matrix, classification_rep
 import pandas as pd
 from io import StringIO
 import re
+import time
+import os
+
+results_dir = r"C:\Users\Linnea\Downloads\sklearn_files" 
+
+# composite is a multidimensional raster file where each dimensions represents an input variable (i.e., input variable rasters are "stacked" into one)
+composite = "RF_A_clipenvebm.tif"
+#train_tif is the training raster file (and path to) used in the RF classification
+train_tif = "50p_100ar3_snap.tif"
+#known delineations:
+true_ds = "p06_vals_str_clip.tif"
+
+composite_input = os.path.join(results_dir,composite)
+train_input = os.path.join(results_dir,train_tif)
+true_input = os.path.join(results_dir,true_ds)
+
+
 
 
 def classify(composite,train_tif, true_ds):
@@ -119,8 +136,8 @@ def classify(composite,train_tif, true_ds):
     #model evaluation:
     importance=[]
     for b, imp in zip(bands, rf.feature_importances_):
-        print('Band {b} importance: {imp}'.format(b=b, imp=imp))
-        importance.append('Band {b} importance: {imp}'.format(b=b, imp=imp))
+        print('Band {b} importance: {imp}'.format(b=b, imp=imp.round(2)))
+        importance.append('Band {b} importance: {imp}'.format(b=b, imp=imp.round(2)))
 
 #    save results to a geotiff file so we can view them in ArcGIS
     #deleted all .pyc files that do this, and ensured that .exe files were closed/reopened to fix error
@@ -191,29 +208,40 @@ def write_acc(conf_matrix_pix,class_report,acc_score, null, specificity, importa
     
     
     #add column and row labels
-    confusion_matrix_pd= pd.DataFrame(conf_matrix_area, index=['actual wetlands (square km)','actual non-wetlands (square km)'], 
+    confusion_matrix_pd1= pd.DataFrame(conf_matrix_area, index=['actual wetlands (square km)','actual non-wetlands (square km)'], 
                                                                 columns=['predicted wetlands (sq km)', 'predicted non-wetlands(square km)'])
+    confusion_matrix_pd= confusion_matrix_pd1.round(2)
     confusion_matrix_pd.loc[u'Σ']= confusion_matrix_pd.sum()
     confusion_matrix_pd[u'Σ'] = confusion_matrix_pd.sum(axis=0)
     confusion_matrix_pd[u'Σ'] = confusion_matrix_pd.sum(axis=1)
     
+    #convert to series. Use strings to format % sign
     acc_score_pd= pd.Series(acc_score, index=['Accuracy score:'])
+    acc_score_pd= acc_score_pd.round(2)
+    print acc_score_pd
+ #   pd.Series(['{0:.2}%'.format('Accuracy score:')])
     null_pd= pd.Series(null, index=['Null accuracy:'])
-    specificity_pd= pd.Series(specificity,
+    null_pd=null_pd.round(2)
+#    null_pd= null_pd.round(2).apply('{:.2%}'.format)
+    specificity_pd= pd.Series((specificity.round(2)),
                               index=['Specificity:'])
-    
+    specificity_pd=specificity_pd.round(2)
+ #   specificity_pd[0]= specificity_pd.round(2).apply('{:.2%}'.format)
     imp_pd=pd.DataFrame(importance)
-
+    imp_pd=imp_pd.round(2)
+    
+    acc_scores_all= acc_score_pd.append([specificity_pd, null_pd])
+    print acc_scores_all
+    
     #send unicode classification report output to a pd.DataFrame
     class_report = re.sub(r" +", " ", class_report).replace("avg / total", "avg/total").replace("\n ", "\n")
     class_report_df = pd.read_csv(StringIO("Classes" + class_report), sep=' ', index_col=0)        
     print (class_report_df)
     
-    acc_scores_all= acc_score_pd.append([specificity_pd, null_pd])
-    print acc_scores_all
+
     
     print 'writing to files'
-    writer=pd.ExcelWriter('C:\Users\Linnea\Documents\GitHubWetlands\wetland_identification\Post_Classification\sklearn_acc_metrics.xlsx')
+    writer=pd.ExcelWriter('C:\Users\Linnea\Documents\GitHubWetlands\wetland_identification\Post_Classification\sklearn_acc_metrics3.xlsx')
 #    header_format = 'Output_accuracy_metrics'.add_format({
 #    'bold': True,
 #    'text_wrap': True,
@@ -238,6 +266,9 @@ def main(train_tif,composite, true_ds):
     write_acc(a,b,c,d,e,f_imp)
     
 
-
-
+if __name__== '__main__':
+    time0= time.time()
+    main(train_input,composite_input, true_input)
+    time1=time.time()
+    print 'runtime was: {time} seconds'.format(time=(time1-time0))
 
