@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Mar 15 16:16:54 2018
-
-@author: Gina O'Neil
+This program executes a train/test split, random forest classification, and accuracy assessment.
+   Authors:    G. O'Neil and L. Saby
+   Changelog: 20180323: Initial version
 """
 from sklearn.ensemble import RandomForestClassifier
 from osgeo import gdal, gdal_array
