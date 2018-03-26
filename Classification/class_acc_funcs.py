@@ -22,9 +22,6 @@ import scipy
 from scipy import stats
 import subprocess
 
-clip_bounds = r"H:\P06_RT29\Data\VDOT_Verification\P06_LimitsP.shp"
-data_dir = r"D:\2ndStudy_ONeil\Terrain_Processing\sklearn_files" 
-results_dir = r"D:\2ndStudy_ONeil\Scratch_Output\results" 
 
 """
 Global classification parameters:
@@ -41,6 +38,12 @@ Global classification parameters:
     
     nw_cw = class weight of the negative (nonwetland) class
             negative pixel value = 1
+            
+    clip_bounds = path to shapefile used to clip rasters (optional)
+    
+    data_dir = path to folder where input data can be found
+    
+    results_dir = path to folder where results are saved
     
 """
 
@@ -49,8 +52,13 @@ n_trees = 300
 tree_depth = 50
 wcw = 1
 nwcw = 1
-w_train_prop = 0.1
-nw_train_prop = 0.002
+w_train_prop = 0.6
+nw_train_prop = 0.10
+
+clip_bounds = r"H:\P06_RT29\Data\VDOT_Verification\P06_LimitsP.shp"
+data_dir = r"D:\2ndStudy_ONeil\Terrain_Processing\sklearn_files" 
+results_dir = r"D:\2ndStudy_ONeil\Scratch_Output\results" 
+
 
 def geotiff_to_array(fpath, filename):
     
@@ -170,10 +178,10 @@ def create_train_test(input_feat, verif_data, w_train_prop, nw_train_prop):
     true_w_samples = float(np.size(w_indices))
     true_nw_samples = float(np.size(nw_indices))
     
-    #TODO: save training/testing stats to file + convert #pixels to area
+    #TODO: save training/testing stats to file + convert pixels to area
     
-    print "Total number of wetland samples: %d" %(int(true_w_samples)) + '\n'
-    print "Total number of nonwetland samples %d" %(int(true_nw_samples)) + '\n'
+    print "Total number of verification wetland samples: %d" %(int(true_w_samples)) + '\n'
+    print "Total number of verification nonwetland samples %d" %(int(true_nw_samples)) + '\n'
     
     #get total number of wetland and nonwetland features and calculate number of samples needed
     w_total = len(w_indices[0])
@@ -216,7 +224,7 @@ def create_train_test(input_feat, verif_data, w_train_prop, nw_train_prop):
     test_labels_2d = np.reshape(test_labels, (verif_data.shape[0], verif_data.shape[1]))
     
        
-    """Training and testing FEATURES creation (input variables that are labels either 0 or 1)"""
+    """Training and testing FEATURES creation (input variables that are labeled either 0 or 1)"""
     #create arrays of input variables within training and testing limits    
     test_features = np.copy(input_feat)
     train_features = np.copy(input_feat)
@@ -227,14 +235,16 @@ def create_train_test(input_feat, verif_data, w_train_prop, nw_train_prop):
     true_ratio = float(true_w_samples / true_nw_samples)
     train_ratio = float(w_train_n / nw_train_n)
     
-    print "True wetlands to nonwetlands ratio: %.2f" %(true_ratio) +'\n'
-    print "Training wetlands to nonwetlands ratio: %.2f" %(train_ratio) +'\n'
+    print "True wetlands to nonwetlands ratio: %.3f" %(true_ratio) +'\n'
+    print "Training wetlands to nonwetlands ratio: %.3f" %(train_ratio) +'\n'
     
     n_train =  float(np.sum(~np.isnan(train_labels)))
     n_test = float(np.sum(~np.isnan(test_labels)))
-    train_test_ratio = float(n_train / n_test)
+    train_verif_ratio = float(n_train / (true_w_samples + true_nw_samples))
+    test_verif_ratio = float(n_test/(true_w_samples + true_nw_samples))
 
-    print "Total training samples to testing samples ratio: %.2f" %(train_test_ratio) +'\n'
+    print "Proportion of training samples selected from verification data: %2.2f%%" %(100*train_verif_ratio)
+    print "Proportion of testing samples selected from verification data: %2.2f%%" %(100*test_verif_ratio) +'\n'
     
     return train_labels_2d, test_labels_2d, train_features, test_features
 
@@ -378,11 +388,11 @@ def get_acc(test_labels, pred_vals, importance, fname, results_dir, data_meta, u
     acc_scores_all.to_excel(writer, 'Output_accuracy_metrics', header=False, startrow=12)
     imp_pd.to_excel(writer, 'Model_evaluation_metrics', header=False)
     writer.save()
-    print 'written to .xlsx file'
+    print 'written to %s' %(fname)
     return(conf_matrix_pix, class_report, acc_score, specificity)
 
 
-def main():
+def main(data_dir, results_dir, clip_bounds, n_trees, tree_depth, wcw, nwcw, w_train_prop, nw_train_prop):
     var_file = "A1_comp_clip.tif"
     var_arr, var_meta = geotiff_to_array(data_dir, var_file)
     var_clean = clean_data(var_arr)
