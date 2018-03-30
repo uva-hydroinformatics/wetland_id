@@ -52,9 +52,10 @@ n_trees = 300
 tree_depth = 50
 wcw = 1
 nwcw = 1
-w_train_prop = 0.6
-nw_train_prop = 0.10
+w_train_prop = 0.10
+nw_train_prop = 0.001
 
+var_file = "A1_comp_clip.tif"
 clip_bounds = r"H:\P06_RT29\Data\VDOT_Verification\P06_LimitsP.shp"
 data_dir = r"D:\2ndStudy_ONeil\Terrain_Processing\sklearn_files" 
 results_dir = r"D:\2ndStudy_ONeil\Scratch_Output\results" 
@@ -392,8 +393,7 @@ def get_acc(test_labels, pred_vals, importance, fname, results_dir, data_meta, u
     return(conf_matrix_pix, class_report, acc_score, specificity)
 
 
-def main(data_dir, results_dir, clip_bounds, n_trees, tree_depth, wcw, nwcw, w_train_prop, nw_train_prop):
-    var_file = "A1_comp_clip.tif"
+def main(var_file, data_dir, results_dir, clip_bounds, n_trees, tree_depth, wcw, nwcw, w_train_prop, nw_train_prop):
     var_arr, var_meta = geotiff_to_array(data_dir, var_file)
     var_clean = clean_data(var_arr)
 
@@ -410,6 +410,7 @@ def main(data_dir, results_dir, clip_bounds, n_trees, tree_depth, wcw, nwcw, w_t
     
     rf_results_name = "rf_predict_w%d_nw%d_cws_%d_%d.tif" %(100*w_train_prop, 100*nw_train_prop, wcw, nwcw)
     fuz_results_name = "fuzzy_predict_w%d_nw%d_cws_%d_%d.tif" %(100*w_train_prop, 100*nw_train_prop, wcw, nwcw)
+    
     array_to_geotiff(results_dir,rf_results_name, rf_predict, verif_meta)
     array_to_geotiff(results_dir,fuz_results_name, fuzzy_predict, verif_meta)
     
@@ -422,7 +423,7 @@ def main(data_dir, results_dir, clip_bounds, n_trees, tree_depth, wcw, nwcw, w_t
         
 if __name__== '__main__':
     time0= time.time()
-    main()
+    main(data_dir, results_dir, clip_bounds, n_trees, tree_depth, wcw, nwcw, w_train_prop, nw_train_prop)
     time1=time.time()
     print 'runtime was: {time} seconds'.format(time=(time1-time0))
     sys.exit(0)
