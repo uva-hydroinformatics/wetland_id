@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Apr 17 17:49:24 2018
+Modules call GRASS GIS scripts to perform A* conditioning and TWI calculation, 
+IRA conditioning, and DTW least-cost path analysis.
 
+Created on Tue Apr 17 17:49:24 2018
 @author: Gina O'Neil
 """
 
