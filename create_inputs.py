@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Mar 29 10:50:01 2018
+Modules perform Fill, Impact Reduction Appraoch (IRA), and A* lest-cost hydro conditioning,
+and calculate Laplacian curvature, topographic wetness index (TWI), and cartographic depth-to-water (DTW),
+as well as the necessary inputs for these wetness indices.  
 
+Created on Thu Mar 29 10:50:01 2018
 @author: Gina O'Neil
 """
 
@@ -241,6 +244,9 @@ def calc_dtw(cost_tif, source_shp):
     
 
 def comp_bands(file_dir, var_list, comp_name):
+    """Given a list of variable geotiffs, merges variables into a multiband geotiff
+    where each band contains data for individual variables """
+    
     print "Beginning composite bands..."
     #need funky formatting to add double quotes around file paths to cmd    
     var_f = []
