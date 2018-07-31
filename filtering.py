@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed Mar 28 10:39:59 2018
+This progam applies different smoothing techniques (mean, median, gaussian, perona-malik)
+to an elevation array, given geotiff metadata and a scale of smoothing. DEM array passed
+should have any no data values masked by the raster_array_funcs.clean_array module.
 
+Created on Wed Mar 28 10:39:59 2018
 @author: Gina O'Neil
 """
 
