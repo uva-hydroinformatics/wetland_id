@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 This program executes a train/test split, random forest classification, and accuracy assessment.
-   Authors:    G. O'Neil and L. Saby
+   Authors:    Gina O'Neil and Linnea Saby
    Changelog: 20180323: Initial version
 """
 from sklearn.ensemble import RandomForestClassifier
