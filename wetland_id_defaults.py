@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed Mar 28 15:33:57 2018
+Users of the wetland identification tool must use this script
+to designate input files, tool directories, and parameters.
 
+Created on Wed Mar 28 15:33:57 2018
 @author: Gina O'Neil
 """
 
