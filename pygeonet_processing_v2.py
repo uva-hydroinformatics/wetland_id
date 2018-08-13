@@ -14,6 +14,15 @@ from pygeonet_network_delineation import *
 from pygeonet_xsbank_extraction import *
 import time
 import wetland_id_defaults as default
+"""EDITED: removed pygeonet nan removal method (L29-L35), main now takes one arg, a nanDemArray, which is created in 
+the wetland id processing script using clean_data from raster_array_funcs.py
+
+**if fast marching basin index "startpoint[x][y]" begins at [0][y], this is likely a sign that nan values are 
+incorrectly filtered out...should be much faster process that starts at random [x][y] and does not go through 
+entirety of len(x) len(y). If this is still happening and nan assignment is correct, GRASS may be trying to 
+use corrupted files from previous runs --> we removed the check in pygeonet_grass that avoided re-doing grass calcs
+"""
+
 
 #---------------------------------------------------------------------------------
 #------------------- MAIN FUNCTION--------------------------------------------------
