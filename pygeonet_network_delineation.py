@@ -6,6 +6,8 @@ from pygeonet_plot import *
 from pygeonet_rasterio import *
 from pygeonet_vectorio import *
 
+"""EDITED: L229 changed to L300 to fix indexing error"""
+
 # Compute discrete geodesics
 def compute_discrete_geodesic(geodesicDistanceArray,skeletonEndPoint,doTrueGradientDescent,num):
     #print 'computing discrete geodesics'
@@ -294,7 +296,7 @@ def Channel_Reconstruct(geodesicPathsCellDic, numberOfEndPoints):
                 StartpointList.append([geodesicPathsCellDic[str(i)][0,j],geodesicPathsCellDic[str(i)][1,j]])
                 NewgeodesicPathsCellDic[str(k)] = [[geodesicPathsCellDic[str(i)][0,j]],[geodesicPathsCellDic[str(i)][1,j]]]
             else:
-#                if size_sr[geodesicPathsCellDic[str(i)][0,j],geodesicPathsCellDic[str(i)][1,j]] == size_sr[geodesicPathsCellDic[str(i)][0,j-1],geodesicPathsCellDic[str(i)][1,j-1]]:
+#GLO edit                if size_sr[geodesicPathsCellDic[str(i)][0,j],geodesicPathsCellDic[str(i)][1,j]] == size_sr[geodesicPathsCellDic[str(i)][0,j-1],geodesicPathsCellDic[str(i)][1,j-1]]:
                 if size_sr[geodesicPathsCellDic[str(i)][0,j]][geodesicPathsCellDic[str(i)][1,j]] == size_sr[geodesicPathsCellDic[str(i)][0,j-1]][geodesicPathsCellDic[str(i)][1,j-1]]:
                     NewgeodesicPathsCellDic[str(k)][0].append(geodesicPathsCellDic[str(i)][0,j])
                     NewgeodesicPathsCellDic[str(k)][1].append(geodesicPathsCellDic[str(i)][1,j])
