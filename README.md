@@ -46,6 +46,8 @@ _Note: We use PyGeoNet Version 2.0, obtained January, 2017 from https://sites.go
        "C:\Program Files\GRASS GIS 7.2.2\etc\python\grass\script"
        "C:\Program Files\GRASS GIS 7.2.2\bin"
        "C:\Program Files\GRASS GIS 7.2.2\scripts"
+    2c. Install GRASS r.stream.basins:
+      open cmd as admin, open grass (>>> grass72.bat), ignore GUI popup and back on cmd (>>> g.extension r.hydrodem -s) where -s flag   installs for all users
 
 1.Sangireddy, H.*, C.P. Stark, A. Kladzyk*, Passalacqua, P. (2016). GeoNet: An open source software for the automatic and objective extraction of channel heads, channel network, and channel morphology from high resolution topography data, Environmental Modeling and Software, 83, 58-73, doi:10.1016/j.envsoft.2016.04.026. 
 
