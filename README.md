@@ -32,10 +32,9 @@ Dependencies (other resources available for install instructions, steps we used 
       "C:\Anaconda2\Lib\site-packages\osgeo\scripts"
 
 *PyGeoNet & GRASS GIS*
-_Note: We use the version of PyGeoNet that was available in January, 2017 from https://sites.google.com/site/geonethome/ (also see related publications for this tool at this link). Some changes were made to this code to be executable for the wetland ID tool. Our changes did not alter the GeoNet workflow, and are reflected in the selected PyGeoNet modules posted with our code. Other PyGeoNet modules were unchanged but are necessary to run this workflow_
+_Note: We use PyGeoNet Version 2.0, obtained January, 2017 from https://sites.google.com/site/geonethome/ [1; 2; 3; 4]. Some changes were made to this code to be executable for the wetland ID tool. **PyGeoNet scripts that have been edited for use within the wetland ID tool are annotated within first few linesm our changes did not alter the GeoNet workflow. PyGeoNet scripts without 'edit' notes reflect the original versions posted with Version 2.0, described by [1].**_
  
  PyGeoNet installation:
- 
  1. Download available here https://sites.google.com/site/geonethome/source-code, Python version - latest update 2017/10/24
  2. Installation instructions and GRASS GIS download info available here https://sites.google.com/site/geonethome/howto, "Tutorial for installation of Python GeoNet v2 (pdf)"
    2a. Add system variables: 
@@ -47,6 +46,12 @@ _Note: We use the version of PyGeoNet that was available in January, 2017 from h
        "C:\Program Files\GRASS GIS 7.2.2\etc\python\grass\script"
        "C:\Program Files\GRASS GIS 7.2.2\bin"
        "C:\Program Files\GRASS GIS 7.2.2\scripts"
+
+1.Sangireddy, H.*, C.P. Stark, A. Kladzyk*, Passalacqua, P. (2016). GeoNet: An open source software for the automatic and objective extraction of channel heads, channel network, and channel morphology from high resolution topography data, Environmental Modeling and Software, 83, 58-73, doi:10.1016/j.envsoft.2016.04.026. 
+2. Passalacqua, P., P. Belmont, and E. Foufoula-Georgiou (2012), Automatic channel network and geomorphic feature extraction in flat and engineered landscapes, Water Resour. Res., 48, W03528, doi:10.1029/2011WR010958.
+3. Passalacqua, P., P. Tarolli, and E. Foufoula-Georgiou (2010), Testing space-scale methodologies for automatic geomorphic feature extraction from lidar in a complex mountainous landscape, Water Resour. Res., 46, W11535, doi:10.1029/2009WR008812.
+4. Passalacqua, P., T. Do Trung, E. Foufoula-Georgiou, G. Sapiro, and W. E. Dietrich (2010), A geometric framework for channel network extraction from lidar: Nonlinear diffusion and geodesic paths, J. Geophys. Res., 115, F01002, doi:10.1029/2009JF001254.
+
 
 *Scikit-Learn & SciPy*
 
