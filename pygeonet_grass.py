@@ -7,6 +7,8 @@ from pygeonet_rasterio import *
 import grass.script as g
 import grass.script.setup as gsetup
 
+"""EDITED SCRIPT: removed some repetive commmands, removed swap memory option, added command to set GRASS GIS env vars,
+move gsetup.init command earlier, separately installed r.stream.basins. for GRASS (see wetland ID README)"""
 
 def grass(filteredDemArray):
     grass7bin = Parameters.set_grassbin()
