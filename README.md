@@ -32,7 +32,7 @@ Dependencies (other resources available for install instructions, steps we used 
       "C:\Anaconda2\Lib\site-packages\osgeo\scripts"
 
 *PyGeoNet & GRASS GIS*
-_Note: We use PyGeoNet Version 2.0, obtained January, 2017 from https://sites.google.com/site/geonethome/ [1; 2; 3; 4]. Some changes were made to this code to be executable for the wetland ID tool. **PyGeoNet scripts that have been edited for use within the wetland ID tool are annotated within first few linesm our changes did not alter the GeoNet workflow. PyGeoNet scripts without 'edit' notes reflect the original versions posted with Version 2.0, described by [1].**_
+_Note: We use PyGeoNet Version 2.0, obtained January, 2017 from https://sites.google.com/site/geonethome/ [1; 2; 3; 4]. Some changes were made to this code to be executable for the wetland ID tool. **PyGeoNet scripts that have been edited for use within the wetland ID tool are annotated within first few lines, our changes did not alter the GeoNet workflow. PyGeoNet scripts without 'edit' notes reflect the original versions posted with Version 2.0, described by [1].**_
  
  PyGeoNet installation:
  1. Download available here https://sites.google.com/site/geonethome/source-code, Python version - latest update 2017/10/24
