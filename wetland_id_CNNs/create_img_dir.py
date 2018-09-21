@@ -16,85 +16,114 @@ from osgeo import gdal, ogr
 import os
 import sys
 import subprocess
+import glob
 
 
-tif_in = r"D:\3rdStudy_ONeil\data\s1_scratch\comp.tif"
-imgs_dataset = r"D:\3rdStudy_ONeil\data\s1_scratch\imgs"
-dset = gdal.Open(tif_in)
-ext = dset.GetGeoTransform()
+def create_imgs(tif_in, shp_in, img_dir):
 
-width = dset.RasterXSize
-height = dset.RasterYSize
+    """
+    tif_in = path to composite geotiff - raster contains input var info
+    shp_in = path to ground truth shapefile
+    img_dir = location for image directory
+    """
 
-print (width, 'x', height)
+    #open geotiff and get info
+    dset = gdal.Open(tif_in)
+    ext = dset.GetGeoTransform()
+    width = dset.RasterXSize
+    height = dset.RasterYSize
 
-tilesize = 500
+    tilesize = 500
 
-img_n = 0
+    #first image #
+    img_n = 0
 
-for i in range(0, width, tilesize):
-    for j in range(0, height, tilesize):
-        new_dir = r"D:\3rdStudy_ONeil\data\s1_scratch\imgs\%s" %(str(img_n))
-        os.mkdir(new_dir)
-        w = min(i+tilesize, width) - i
-        h = min(j+tilesize, height) - j
-        gdaltranString = "gdal_translate -of GTIFF -srcwin "+str(i)+", "+str(j)+", "+str(w)+", " \
-            +str(h)+" " + tif_in + " " + new_dir + r"\%d.tif" %(img_n)
-        os.system(gdaltranString)
-        img_n +=1
+    #cut composite.tif into tilesize x tilesize tiles
+    for i in range(0, width, tilesize):
+        for j in range(0, height, tilesize):
+            #create subdir for each tile
+            subdir = os.path.join(img_dir, "{}".format(str(img_n)))
+            os.mkdir(subdir)
+            w = min(i+tilesize, width) - i
+            h = min(j+tilesize, height) - j
+            #clip geotiff to extents and save as "IMG#.tif" in subdir
+            cmd = "gdal_translate -of GTIFF -srcwin "+str(i)+", "+str(j)+", "+str(w)+", " \
+                +str(h)+" " + tif_in + " " + subdir + r"\%d.tif" %(img_n)
+            os.system(cmd)
+            #increase img #
+            img_n +=1
 
-inVectorPath = r"D:\2ndStudy_ONeil\Tool_testing\data\Site1\wetlands.shp"
-img_dirs = next(os.walk(imgs_dataset))[1]
+    #get list of new image subdirs
+    img_subdirs = next(os.walk(img_dir))[1]
 
-for subdir in img_dirs:
-    inRasterPath = os.path.join(imgs_dataset, subdir)
-    files = [f for f in os.listdir(inRasterPath) if f.endswith(".tif")]
-    for f in files:
-        src = gdal.Open(os.path.join(inRasterPath, f))
-        ulx, xres, xskew, uly, yskew, yres  = src.GetGeoTransform()
-        sizeX = src.RasterXSize * xres
-        sizeY = src.RasterYSize * yres
+    #clip shp to each tile extents
+    for x in range(len(img_subdirs)):
+        tile_dir = os.path.join(img_dir, img_subdirs[x])
+        tile_in = glob.glob(str(tile_dir)+r"\*.tif")[0] #should just be 1 tiff
+
+        #open tile.tif
+        dset = gdal.Open(tile_in)
+        ulx, xres, xskew, uly, yskew, yres  = dset.GetGeoTransform()
+        sizeX = dset.RasterXSize * xres
+        sizeY = dset.RasterYSize * yres
         lrx = ulx + sizeX
         lry = uly + sizeY
-        src = None
-        outVectorPath = os.path.join(inRasterPath, "%s_wetland.shp" %(f[:-4]))
         # format the extent coords
-        extent = '{0} {1} {2} {3}'.format(ulx, lry, lrx, uly);
+        extent = '{0} {1} {2} {3}'.format(ulx, lry, lrx, uly)
+        dset = None
+
+        #shp named with tile number in corresponding directory
+        shp_out = tile_in[:-4]+ "_wetland.shp"
 
         # make clip command with ogr2ogr - default to shapefile format
-        cmd = 'ogr2ogr ' + outVectorPath + ' ' + inVectorPath + ' -clipsrc ' + extent
-
+        cmd = 'ogr2ogr ' + shp_out + ' ' + shp_in + ' -clipsrc ' + extent
         # call the command
         subprocess.call(cmd, shell=True)
 
+        #open new shapefile to rasterize
+        #TODO: delete shapefile after creation
         driver = ogr.GetDriverByName('ESRI Shapefile')
-        fn = outVectorPath
-        dataSource = driver.Open(fn, 1)
-
+        dataSource = driver.Open(shp_out, 1) #make writable
         layer = dataSource.GetLayer()
         feature_count = layer.GetFeatureCount()
 
+        #check for wetland instanc in tile extents
         if feature_count > 0:
             defn = layer.GetLayerDefn()
             field_count=defn.GetFieldCount()
-            id_field = ogr.FieldDefn("instance", ogr.OFTInteger)
-            layer.CreateField(id_field)
+            instance = ogr.FieldDefn("instance", ogr.OFTInteger)
+            layer.CreateField(instance)
             feature = layer.GetNextFeature()
-            x = 0
+
+            #rasterize each wetland instance
+            z = 0
             while feature is not None:
-                feature.SetField("instance", x)
+                feature.SetField("instance", z)
                 layer.SetFeature(feature)
-                tif_out = outVectorPath[:-4] + "_%d.tif" % (x)
-                cmd = 'gdal_rasterize -burn 1 -where \"instance=%d\" -a_nodata 0 -ot Int32 -tr 1 1 \"%s\" \"%s\"' \
-                    %(x, outVectorPath, tif_out)
-                print (cmd)
-                subprocess.Popen(cmd)
+
+                #name new wetland mask geotiff as TILE#_wetland_WETLAND#.tif
+                tif_out = shp_out[:-4] + "_%d.tif" % (z)
+
+                cmd = 'gdal_rasterize -burn 1 -where \"instance={:d}\" -a_nodata 0 -ot Int32 -tr {} {} \"{}\" \"{}\"' \
+                    .format(z, xres, yres, shp_out, tif_out)
+                subprocess.Popen(cmd) #Popen kept double quotes needed for cmd, call did not
                 feature.Destroy()
                 feature = layer.GetNextFeature()
-                x += 1
+                z += 1
             feature = None
 
+        #if no wetlands delete shapefile and do not create tiff
         else:
-            driver.DeleteDataSource(outVectorPath)
+            driver.DeleteDataSource(shp_out)
 
         dataSource.Destroy()
+    print("Image directory created with {} images".format(len(img_subdirs)))
+
+
+tif_in = r"D:\3rdStudy_ONeil\data\s1_scratch\comp.tif"
+
+shp_in = r"D:\2ndStudy_ONeil\Tool_testing\data\Site1\wetlands.shp"
+
+img_dir = r"D:\3rdStudy_ONeil\data\s1_scratch\imgs"
+
+create_imgs(tif_in, shp_in, img_dir)
