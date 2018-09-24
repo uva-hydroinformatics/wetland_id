@@ -17,6 +17,7 @@ import os
 import sys
 import subprocess
 import glob
+import shutil
 
 
 def create_imgs(tif_in, shp_in, img_dir):
@@ -33,7 +34,7 @@ def create_imgs(tif_in, shp_in, img_dir):
     width = dset.RasterXSize
     height = dset.RasterYSize
 
-    tilesize = 500
+    tilesize = 640 #should be multiple of 64
 
     #first image #
     img_n = 0
@@ -43,6 +44,8 @@ def create_imgs(tif_in, shp_in, img_dir):
         for j in range(0, height, tilesize):
             #create subdir for each tile
             subdir = os.path.join(img_dir, "{}".format(str(img_n)))
+            if os.path.exists(subdir):
+                shutil.rmtree(subdir)
             os.mkdir(subdir)
             w = min(i+tilesize, width) - i
             h = min(j+tilesize, height) - j
@@ -70,10 +73,12 @@ def create_imgs(tif_in, shp_in, img_dir):
         lry = uly + sizeY
         # format the extent coords
         extent = '{0} {1} {2} {3}'.format(ulx, lry, lrx, uly)
+        print(extent)
+
         dset = None
 
         #shp named with tile number in corresponding directory
-        shp_out = tile_in[:-4]+ "_wetland.shp"
+        shp_out = tile_in[:-4]+ "-wetland.shp"
 
         # make clip command with ogr2ogr - default to shapefile format
         cmd = 'ogr2ogr ' + shp_out + ' ' + shp_in + ' -clipsrc ' + extent
@@ -102,10 +107,11 @@ def create_imgs(tif_in, shp_in, img_dir):
                 layer.SetFeature(feature)
 
                 #name new wetland mask geotiff as TILE#_wetland_WETLAND#.tif
-                tif_out = shp_out[:-4] + "_%d.tif" % (z)
+                tif_out = shp_out[:-4] + "-%d.tif" % (z)
 
-                cmd = 'gdal_rasterize -burn 1 -where \"instance={:d}\" -a_nodata 0 -ot Int32 -tr {} {} \"{}\" \"{}\"' \
-                    .format(z, xres, yres, shp_out, tif_out)
+                cmd = 'gdal_rasterize -burn 1 -where \"instance={:d}\" -a_nodata 0 -ot Int32 -te {} {} {} {} -tr {} {} \"{}\" \"{}\"' \
+                    .format(z, ulx, lry, lrx, uly, xres, yres, shp_out, tif_out)
+
                 subprocess.Popen(cmd) #Popen kept double quotes needed for cmd, call did not
                 feature.Destroy()
                 feature = layer.GetNextFeature()
