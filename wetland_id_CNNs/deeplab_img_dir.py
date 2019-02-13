@@ -23,7 +23,7 @@ def build_imgs(tif_in, shp_in, img_dir, tilesize=256):
     :param shp_in: verification wetlands shapefile
     :param img_dir: ./datasets/wetlands/dataset
     :param tilesize: dimensions of images (pixels)
-    :return:
+    :return: text file containing list of eligible images to use in train/test split
     """
 
     #define file path variables
@@ -35,13 +35,6 @@ def build_imgs(tif_in, shp_in, img_dir, tilesize=256):
 
     # create text files if they do not exist
     eligImg = os.path.join(ImageSets, 'eligible.txt')
-    trainImg = os.path.join(ImageSets, 'train.txt')
-    valImg = os.path.join(ImageSets, 'val.txt')
-    trainvalImg = os.path.join(ImageSets, 'trainval.txt')
-    # texts = [eligImg, trainImg, valImg, trainvalImg]
-    # for f in texts:
-    #     if not os.path.exists(f):
-    #         os.mkdir(f)
 
     #open geotiff and get info
     dset, meta = ra.gtiff_to_arr(tif_in, 'float')
@@ -116,9 +109,6 @@ def build_imgs(tif_in, shp_in, img_dir, tilesize=256):
             xmin, xmax, ymin, ymax = ulx, lrx, lry, uly  # see note above
             pixel_size = float(meta['pix_res'])
 
-            # temp_tif = ra.rasterize_opts(shp_tile, SegmentationClass, gt_temp, 0, pixel_size, [ulx, lrx, lry, uly], 1)
-            # os.remove(gt_temp)
-
             # Create a dummy geotiff using the MEM driver of gdal
             target_ds = gdal.GetDriverByName('MEM').Create('', int(sizeX), int(sizeY * -1), gdal.GDT_Byte)
             target_ds.SetGeoTransform((xmin, pixel_size, 0, ymax, 0, -pixel_size))
@@ -154,10 +144,10 @@ def build_imgs(tif_in, shp_in, img_dir, tilesize=256):
             source_ds = None
 
 
-
-
     print("\nStudy site split into {} images\n".format(len(os.listdir(TifTiles))))
     print("{} images with wetland instances\n".format(len(os.listdir(SegmentationClass))))
+
+    return eligImg
 
 if __name__ == '__main__':
 
@@ -165,5 +155,4 @@ if __name__ == '__main__':
     shp_in = r"D:\2ndStudy_ONeil\Tool_testing\data\Site1\wetlands.shp"
     img_dir = r"D:\3rdStudy_ONeil\wetland_identification\wetland_id_CNNs\tensorflow\models\research\deeplab\datasets\wetlands\dataset"
 
-    build_imgs(tif_in, shp_in, img_dir, tilesize=512)
-    sys.exit(0)
+    eligble_images = build_imgs(tif_in, shp_in, img_dir, tilesize=512)
