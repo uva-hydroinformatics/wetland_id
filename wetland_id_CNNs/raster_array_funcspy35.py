@@ -1,9 +1,14 @@
+"""
+Functions for georeferenced gridded data I/O. Configured to read geotiffs in as ndarrays
+and print ndarrays to geotiffs. Geotiffs can be converted to PNG and JPEG images.
+
+Author: Gina O'Neil
+"""
+
 from osgeo import gdal, gdal_array, ogr
 import numpy as np
-# import pandas as pd
 import subprocess
 import sys
-# import wetland_id_defaults as default
 import scipy
 from scipy import stats
 import os
