@@ -5,6 +5,9 @@ Image directory home >> .\tensorflow\models\research\deeplab\datasets\wetlands
         +JPEGImages --> input color images (data), *.jpg
         +SegmentationClass --> ground truth annotations (wetland/BG binary) corresponding to each JPEGImage
     +tfrecord
+
+Author: Gina O'Neil
+Initial Version: Feb. 13, 2019
 """
 
 from osgeo import gdal, ogr
@@ -35,6 +38,8 @@ def build_imgs(tif_in, shp_in, img_dir, tilesize=256):
 
     # create text files if they do not exist
     eligImg = os.path.join(ImageSets, 'eligible.txt')
+    if os.path.exists(eligImg):
+        os.remove(eligImg)
 
     #open geotiff and get info
     dset, meta = ra.gtiff_to_arr(tif_in, 'float')
@@ -145,12 +150,11 @@ def build_imgs(tif_in, shp_in, img_dir, tilesize=256):
 
 
     print("\nStudy site split into {} images\n".format(len(os.listdir(TifTiles))))
-    print("{} images with wetland instances\n".format(len(os.listdir(SegmentationClass))))
+    print("{} images with wetland instances\n".format(len([f for f in os.listdir(SegmentationClass) if f.endswith(".png")])))
 
     return eligImg
 
 if __name__ == '__main__':
-
     tif_in = r"D:\2ndStudy_ONeil\Tool_testing\data\Site1\composites\comp_o_c.tif"
     shp_in = r"D:\2ndStudy_ONeil\Tool_testing\data\Site1\wetlands.shp"
     img_dir = r"D:\3rdStudy_ONeil\wetland_identification\wetland_id_CNNs\tensorflow\models\research\deeplab\datasets\wetlands\dataset"
