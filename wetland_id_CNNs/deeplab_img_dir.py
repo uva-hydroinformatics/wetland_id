@@ -106,7 +106,7 @@ def build_imgs(tif_in, shp_in, img_dir, tilesize=256):
 
             # write filename to eligible.txt
             with open(eligImg, "a") as file:
-                file.write("{}\n".format(jpg))
+                file.write("{}\n".format(os.path.basename(jpg)[:-4])) #to be compatible with existing deeplab scripts, only save basename w/o extension
                 file.close()
 
             #rasterize ground truth annotation
