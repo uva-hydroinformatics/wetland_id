@@ -50,23 +50,21 @@ for dir in dirs:
         os.mkdir(dir)
 
 #params
-train_percent = 0.6
-trainval_percent = 0.2
+train_percent = 0.8
 img_tile_size = 512
-train_iter = 500
+train_iter = 30000
 train_crop_size = img_tile_size + 1
 
 #============================================ create dataset of wetland images =========================================
-# eligble_images = build_imgs(tif_in, shp_in, img_dir, tilesize=img_tile_size) #uncomment to rerun
+eligble_images = build_imgs(tif_in, shp_in, img_dir, tilesize=img_tile_size) #uncomment to rerun
 
 #from eligible images, split into three datasets
-# trainList, trainvalList, valList = \
-#     split_imgs(eligble_images, trainImg, trainvalImg, valImg, train_percent, trainval_percent)
+trainList, valList = \
+    split_imgs(eligble_images, trainImg, valImg, train_percent)
 
 trainList = [line.rstrip('\n') for line in open(trainImg, "r")]
-trainvalList = [line.rstrip('\n') for line in open(trainvalImg, "r")]
 valList = [line.rstrip('\n') for line in open(valImg, "r")]
-
+sys.exit(0)
 #=========================================  build wetland dataset as tf records ========================================
 os.chdir(path_to_sh)
 print (os.getcwd())
