@@ -39,7 +39,7 @@ def build_imgs(tif_in, shp_in, img_dir, tilesize=256):
     shp_dir = os.path.join(img_dir, "WetlandsSHP")
 
     # create text files if they do not exist
-    eligImg = os.path.join(ImageSets, 'eligible.txt')
+    eligImg = os.path.join(ImageSets, 'trainval.txt')
     if os.path.exists(eligImg):
         os.remove(eligImg)
 
@@ -156,17 +156,15 @@ def build_imgs(tif_in, shp_in, img_dir, tilesize=256):
 
     return eligImg
 
-def split_imgs(ImgList, trainImg, trainvalImg, valImg, train_percent, trainval_percent):
+def split_imgs(ImgList, trainImg, valImg, train_percent):
     """
     :param ImgList: text file containing list of all eligible image files to use
     :param trainImg: filepath to text file to save training images
-    :param trainvalImg: filepath to text file to save training validation images
     :param valImg: filepath to text file to save validation images
     :param train_percent: percent of ImgList to pick for training
-    :param trainval_percent: percent of ImgList to pick for training validation (validation is remaining percent)
-    :return: trainImg, trainvalImg, valImg lists
+    :return: trainImg and valImg lists
     """
-    val_percent = 1 - (train_percent + trainval_percent)
+    val_percent = 1 - (train_percent)
 
     # from list of eligible images, randomly split into train, val, and trainval
     with open(ImgList, "r") as text:
@@ -176,7 +174,7 @@ def split_imgs(ImgList, trainImg, trainvalImg, valImg, train_percent, trainval_p
     shuffle(elig_list)
 
     # don't allow overwriting or appending existing text files
-    check_list = [trainImg, trainvalImg, valImg]
+    check_list = [trainImg, valImg]
     for f in check_list:
         if os.path.exists(f):
             os.remove(f)
@@ -187,17 +185,11 @@ def split_imgs(ImgList, trainImg, trainvalImg, valImg, train_percent, trainval_p
         text.writelines('\n'.join(t for t in trainList))
     text.close()
 
-    trainvalImgThresh = int(len(elig_list) * trainval_percent)
-    trainvalList = elig_list[trainImgThresh: trainImgThresh + trainvalImgThresh]
-    with open(trainvalImg, "w") as text:
-        text.writelines('\n'.join(t for t in trainvalList))
-    text.close()
-
     valImgThresh = int(len(elig_list) * val_percent)
-    valList = elig_list[-valImgThresh:]
+    valList = elig_list[ -valImgThresh : ]
     with open(valImg, "w") as text:
         text.writelines('\n'.join(t for t in valList))
     text.close()
 
-    return trainList, trainvalList, valList
+    return trainList, valList
 
