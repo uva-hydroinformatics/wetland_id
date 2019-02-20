@@ -124,7 +124,7 @@ def arr_to_gtiff(data, data_meta, fpath, fname, dtype='float', nodata=-9999):
 
 def gtiff_to_img(tif_in, fpath, fname, img_type):
     """
-    :param tif_in: filepath to geotiff to be converted
+    :param tif_in: filepath to geotiff to be converted, for PNG no data = 255
     :param fpath: (str) img out file path
     :param fname: (str) img out filename
     :param img_type: (str) "JPG" or "PNG", n_bands > 1 should use JPG
@@ -143,9 +143,9 @@ def gtiff_to_img(tif_in, fpath, fname, img_type):
 
     elif img_type == "PNG":
         list_options = [
-            '-ot UInt16',
+            '-ot Byte',
             '-of PNG',
-            '-scale 0 1 1 2',  # orig 0s were being clamped to nodata
+            # '-scale 0 1 1 2',  # change here to assign different values to gt classes
             '-a_nodata 255',
         ]
         options_string = " ".join(list_options)
@@ -154,9 +154,9 @@ def gtiff_to_img(tif_in, fpath, fname, img_type):
         print ("Only JPG or PNG images can be created.")
         return ""
 
-    print ("Converting {} to {} image......".format(os.path.basename(tif_in), img_type))
+    gdal.Translate(imgout, tif_in, options=options_string)
 
-    gdal.Translate(imgout, os.path.join(cwd, tif), options=options_string)
+    print ("Converted {} to {} image!".format(os.path.basename(tif_in), img_type))
 
     return imgout
 
@@ -246,17 +246,16 @@ def rasterize_opts(shp_in, fpath, fname, out_tif_val, pix_res, ext, outter_vals)
     :param fname: output fileanme
     :param out_tif_val: value to burn into new raster
     :param pix_res: output pixel resolution
-    :param ext: ext of output raster
+    :param ext: ext of output raster, list of xmin, ymin, xmax, ymax
     :param outter_vals: pixel values for pixels outside of shapefile but within extents
     :return: filepath to new geotif raster
     """
-    #ext should be a list of xmin, ymin, xmax, ymax or None to assign minimum extent based on shape
 
-    tif_out = os.path.join(out_tif_path, out_tif_name)
+    tif_out = os.path.join(fpath, fname)
 
-    cmd = "gdal_rasterize -init %f -burn %f -a_nodata -9999. -ot Float32 -co COMPRESS=LZW \
-    -te %f %f %f %f -tr %f %f %s %s" \
+    cmd = "gdal_rasterize -init %f -burn %f -a_nodata -9999. -ot Float32 -co COMPRESS=LZW -te %f %f %f %f -tr %f %f %s %s" \
     %(outter_vals, out_tif_val, ext[0], ext[2], ext[1], ext[3], pix_res, pix_res, shp_in, tif_out)
+    print(cmd)
 
     cmd_info = 'gdalinfo.exe -stats \"%s\"'%(tif_out)
 
