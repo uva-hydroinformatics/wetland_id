@@ -1,0 +1,3 @@
+[submodule "CNNs/tensorflow/models"]
+	path = CNNs/tensorflow/models
+	url = https://github.com/uva-hydroinformatics/models.git
