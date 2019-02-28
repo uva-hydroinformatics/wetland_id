@@ -21,13 +21,15 @@ import raster_array_funcspy35 as ra
 import shlex
 import math
 from random import shuffle
+import sklearn.preprocessing as skp
 
-def build_imgs(tif_in, shp_in, img_dir, tilesize=256):
+def build_imgs(tif_in, shp_in, img_dir, tilesize, no_data_val):
     """
     :param tif_in: geotiff with n bands, each band representing input data
     :param shp_in: verification wetlands shapefile
     :param img_dir: ./datasets/wetlands/dataset
     :param tilesize: dimensions of images (pixels)
+    :param no_data_val: no data value to assign to output images, will be same for input data images and annotations
     :return: text file containing list of eligible images to use in train/test split
     """
 
@@ -43,8 +45,19 @@ def build_imgs(tif_in, shp_in, img_dir, tilesize=256):
     if os.path.exists(eligImg):
         os.remove(eligImg)
 
-    #open geotiff and get info
+    scale_tif = os.path.join(img_dir, "scaled_input.tif") #not needed yet, reserving for future use
+    list_options = [
+        '-ot Byte',
+        '-of GTIFF',
+        '-scale' # change here to assign different values to gt classes
+        # '-a_nodata {}'.format(no_data_val)
+    ]
+    options_string = " ".join(list_options)
+    gdal.Translate(scale_tif, tif_in, options=options_string)
+
+    #open orig geotiff and get info
     dset, meta = ra.gtiff_to_arr(tif_in, 'float')
+
     width = meta['ncol']
     height = meta['nrow']
 
@@ -67,9 +80,10 @@ def build_imgs(tif_in, shp_in, img_dir, tilesize=256):
 
     #clip shp to each tile extents
     for f_i in os.listdir(TifTiles):
-        tile_in = os.path.join(TifTiles, f_i)
 
+        tile_in = os.path.join(TifTiles, f_i)
         tile_name = f_i[:-4]
+
         dset_tile, meta = ra.gtiff_to_arr(tile_in, 'float')
 
         #get tile info
@@ -94,15 +108,18 @@ def build_imgs(tif_in, shp_in, img_dir, tilesize=256):
 
         #open shapefile tile
         driver = ogr.GetDriverByName('ESRI Shapefile')
-        source_ds = driver.Open(shp_tile, 1)
+        source_ds = driver.Open(shp_tile, 0) # 0 means read only, 1 means writeable
         source_layer = source_ds.GetLayer()
 
         #check if shapefile has wetlands
         feature_count = source_layer.GetFeatureCount()
         if feature_count > 0:
 
+            nonwetland_val = 0
+            wetland_val = 1
+
             #create JPEG image
-            jpg = ra.gtiff_to_img(tile_in, JPEGImages, tile_name+".jpg", "JPG")
+            jpg = ra.gtiff_to_img(tile_in, JPEGImages, tile_name+".jpg", "JPG", no_data_val)
 
             # write filename to eligible.txt
             with open(eligImg, "a") as file:
@@ -117,19 +134,19 @@ def build_imgs(tif_in, shp_in, img_dir, tilesize=256):
             pixel_size = float(meta['pix_res'])
 
             # Create a dummy geotiff using the MEM driver of gdal
-            target_ds = gdal.GetDriverByName('MEM').Create('', int(sizeX), int(sizeY * -1), gdal.GDT_Byte)
+            target_ds = gdal.GetDriverByName('MEM').Create('', int(sizeX), int(sizeY * -1), gdal.GDT_UInt16)#gdal.GDT_Byte)
             target_ds.SetGeoTransform((xmin, pixel_size, 0, ymax, 0, -pixel_size))
             band = target_ds.GetRasterBand(1)
-            band.SetNoDataValue(0)
+            band.Fill(nonwetland_val) # pixels outside of polygon will be filled with this val
             band.FlushCache()
 
             # Rasterize the wetland tile (not exported to a file)
-            gdal.RasterizeLayer(target_ds, [1], source_layer, burn_values=[1], options=['ALL_TOUCHED=TRUE'])
+            gdal.RasterizeLayer(target_ds, [1], source_layer, burn_values=[wetland_val], options=['ALL_TOUCHED=TRUE'])
             # Read as temp wetland tile tif as array
             temp_arr = band.ReadAsArray()
 
             #force any no data areas from input data tile to be no data in gt annotated tiff
-            temp_arr[dset_tile[:, :, 0] == -9999] = 255  # int-type raster no data is 255
+            temp_arr[dset_tile[:, :, 0] == -9999] = no_data_val  # int-type raster no data is 0
             target_ds = None #close
 
             #save fixed temp arr to real geotiff
@@ -137,9 +154,9 @@ def build_imgs(tif_in, shp_in, img_dir, tilesize=256):
             wetland_meta = meta.copy()
             wetland_meta.update({'nbands': 1})
             gt_temp_tif = ra.arr_to_gtiff(temp_arr, wetland_meta, SegmentationClass,
-                                             gt_temp, dtype='int', nodata=255)
+                                             gt_temp, dtype='int', nodata=no_data_val)
 
-            gt_png = ra.gtiff_to_img(gt_temp_tif, SegmentationClass, gt_out, "PNG")
+            gt_png = ra.gtiff_to_img(gt_temp_tif, SegmentationClass, gt_out, "PNG", no_data_val)
             os.remove(gt_temp_tif) #delete the temp tif
             os.remove(gt_temp_tif+".aux.xml")
 

@@ -15,6 +15,7 @@ from deeplab_img_dir import split_imgs
 import os
 import subprocess
 import sys
+import shutil
 
 #=======================================================================================================================
 #Before running, manually change:
@@ -26,13 +27,17 @@ import sys
 # - remove/edit "source activate [VENV]" in sh scripts
 #
 # **note that ./tensorflow/models/research/deeplab/utils/train_utils.py was modified to apply imbalanced weights
-# to classes
+# to classes --- need to edit this code if class labels change!!
 #=======================================================================================================================
+
+import tensorflow as tf
+from tensorflow.core.framework import graph_pb2 as gpb
+from google.protobuf import text_format as pbtf
 
 #filepaths
 tif_in = r"D:\2ndStudy_ONeil\Tool_testing\data\Site1\composites\comp_o_c.tif"
 shp_in = r"D:\2ndStudy_ONeil\Tool_testing\data\Site1\wetlands.shp"
-img_dir = r"D:\3rdStudy_ONeil\wetland_identification\wetland_id_CNNs\tensorflow\models\research\deeplab\datasets\wetlands\dataset"
+img_dir = r"D:\3rdStudy_ONeil\wetland_id\CNNs\tensorflow\models\research\deeplab\datasets\wetlands\dataset"
 ImageSets = os.path.join(img_dir, "ImageSets")
 JPEGImages = os.path.join(img_dir, "JPEGImages")
 SegmentationClass = os.path.join(img_dir, "SegmentationClass")
@@ -41,7 +46,7 @@ shp_dir = os.path.join(img_dir, "WetlandsSHP")
 trainImg = os.path.join(ImageSets, 'train.txt')
 trainvalImg = os.path.join(ImageSets, 'trainval.txt')
 valImg = os.path.join(ImageSets, 'val.txt')
-path_to_sh = r"D:\3rdStudy_ONeil\wetland_identification\wetland_id_CNNs\tensorflow\models\research\deeplab\datasets"
+path_to_sh = r"D:\3rdStudy_ONeil\wetland_id\CNNs\tensorflow\models\research\deeplab\datasets"
 
 #set up directories
 dirs = [ImageSets, JPEGImages, SegmentationClass, TifTiles, shp_dir]
@@ -50,34 +55,42 @@ for dir in dirs:
         os.mkdir(dir)
 
 #params
-train_percent = 0.8
-img_tile_size = 512
-train_iter = 30000
+train_percent = 0.75
+img_tile_size = 256
+train_iter = 50000
 train_crop_size = img_tile_size + 1
 
 #============================================ create dataset of wetland images =========================================
-eligble_images = build_imgs(tif_in, shp_in, img_dir, tilesize=img_tile_size) #uncomment to rerun
-
-#from eligible images, split into three datasets
-trainList, valList = \
-    split_imgs(eligble_images, trainImg, valImg, train_percent)
-
-trainList = [line.rstrip('\n') for line in open(trainImg, "r")]
-valList = [line.rstrip('\n') for line in open(valImg, "r")]
-sys.exit(0)
+# eligble_images = build_imgs(tif_in, shp_in, img_dir, tilesize=img_tile_size, no_data_val=255) #uncomment to rerun
+#
+# #from eligible images, split into three datasets
+# trainList, valList = \
+#     split_imgs(eligble_images, trainImg, valImg, train_percent)
+#
+# trainList = [line.rstrip('\n') for line in open(trainImg, "r")]
+# valList = [line.rstrip('\n') for line in open(valImg, "r")]
+# sys.exit(0)
 #=========================================  build wetland dataset as tf records ========================================
+
 os.chdir(path_to_sh)
-print (os.getcwd())
-#build wetland dataset as tfrecords
-cmd = "{}".format("convert_wetlands.sh")
+
+# #build wetland dataset as tfrecords
+# cmd = "{}".format("convert_wetlands.sh")
 # subprocess.call(cmd, shell=True)
 
 #==============================================  train model on tfrecords  =============================================
-#train_wetlands.sh takes 2 args: number of training iterations and train_crop_size
+
+# train_wetlands.sh takes 2 args: number of training iterations and train_crop_size
 cmd = "{}".format("train_wetlands.sh {} {}".format(train_iter, train_crop_size))
+subprocess.call(cmd, shell=True)
+sys.exit(0)
+#==============================================  evaluate model results  =============================================
+
+# eval_wetlands.sh takes 1 arg: train_crop_size ('vis_crop_size')
+cmd = "{}".format("eval_wetlands.sh {}".format(train_crop_size))
 subprocess.call(cmd, shell=True)
 
 #==============================================  visualize model results  =============================================
-#vis_wetlands.sh takes 1 arg: train_crop_size ('vis_crop_size')
+# #vis_wetlands.sh takes 1 arg: train_crop_size ('vis_crop_size')
 cmd = "{}".format("vis_wetlands.sh {}".format(train_crop_size))
 subprocess.call(cmd, shell=True)

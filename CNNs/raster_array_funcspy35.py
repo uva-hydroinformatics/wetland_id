@@ -17,7 +17,7 @@ import time
 def gtiff_to_arr(path_to_file, dtype):
     """
     :param path_to_file: filepath to input geotiff
-    :param dtype: datatype of pixe;s
+    :param dtype: datatype of pixels
     :return: ndarray
     """
 
@@ -55,6 +55,8 @@ def gtiff_to_arr(path_to_file, dtype):
             gdal_type = gdal.GDT_Float32
         elif dtype == 'int':
             gdal_type = gdal.GDT_Int32
+        elif dtype == 'byte':
+            gdal_type = gdal.GDT_Byte
 
         tif_as_array = np.zeros((tif_ds.RasterYSize, tif_ds.RasterXSize, tif_ds.RasterCount), \
                        gdal_array.GDALTypeCodeToNumericTypeCode(gdal_type))
@@ -85,7 +87,7 @@ def arr_to_gtiff(data, data_meta, fpath, fname, dtype='float', nodata=-9999):
     :param fname: output filename
     :param dtype: target gdal data type
     :param nodata: gdal no data value
-    :return:
+    :return: file path to output geotiff
    """
 
     print ("Writing array to geotiff: %s..."%(fname) + '\n')
@@ -93,6 +95,8 @@ def arr_to_gtiff(data, data_meta, fpath, fname, dtype='float', nodata=-9999):
         gdal_type = gdal.GDT_Float32
     elif dtype == 'int':
         gdal_type = gdal.GDT_Int32
+    elif dtype == 'byte':
+        gdal_type = gdal.GDT_Byte
     else:
         sys.exit("Datatype not recognized, system exiting.....")
 
@@ -122,9 +126,9 @@ def arr_to_gtiff(data, data_meta, fpath, fname, dtype='float', nodata=-9999):
     subprocess.call(cmd_info, shell = False)
     return saveas
 
-def gtiff_to_img(tif_in, fpath, fname, img_type):
+def gtiff_to_img(tif_in, fpath, fname, img_type, no_data_val):
     """
-    :param tif_in: filepath to geotiff to be converted, for PNG no data = 255
+    :param tif_in: filepath to geotiff to be converted
     :param fpath: (str) img out file path
     :param fname: (str) img out filename
     :param img_type: (str) "JPG" or "PNG", n_bands > 1 should use JPG
@@ -138,6 +142,7 @@ def gtiff_to_img(tif_in, fpath, fname, img_type):
             '-of JPEG',
             '-scale',  # inputs are scaled to 0-255
             '-co QUALITY=100 TILED=YES',
+            '-a_nodata {}'.format(no_data_val)
         ]
         options_string = " ".join(list_options)
 
@@ -146,7 +151,7 @@ def gtiff_to_img(tif_in, fpath, fname, img_type):
             '-ot Byte',
             '-of PNG',
             # '-scale 0 1 1 2',  # change here to assign different values to gt classes
-            '-a_nodata 255',
+            '-a_nodata {}'.format(no_data_val)
         ]
         options_string = " ".join(list_options)
 
