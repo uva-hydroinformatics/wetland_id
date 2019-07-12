@@ -141,17 +141,17 @@ def gtiff_to_img(tif_in, fpath, fname, img_type, no_data_val):
             '-ot Byte',
             '-of JPEG',
             '-scale',  # inputs are scaled to 0-255
-            '-co QUALITY=100 TILED=YES',
-            '-a_nodata {}'.format(no_data_val)
+            '-co QUALITY=100 TILED=YES'#,
+            #'-a_nodata {}'.format(no_data_val)
         ]
         options_string = " ".join(list_options)
 
     elif img_type == "PNG":
         list_options = [
             '-ot Byte',
-            '-of PNG',
+            '-of PNG'#,
             # '-scale 0 1 1 2',  # change here to assign different values to gt classes
-            '-a_nodata {}'.format(no_data_val)
+            #'-a_nodata {}'.format(no_data_val)
         ]
         options_string = " ".join(list_options)
 
@@ -195,12 +195,13 @@ def clean_array(arr, no_data=None):
 
     return tif_arr_clean
 
-def clip_geotif(tif_in, fpath, clip_bounds, suf = "_c.tif"):
+def clip_geotif(tif_in, fpath, clip_bounds, suf = "_c.tif", no_data=-9999.):
     """
     :param tif_in: input geotif
     :param fpath: output filepath
     :param clip_bounds: shapefile to use as clipping bounds
     :param suf: suffix to add to tif_in base name
+    :param no_data: optional no data value
     :return: filepath to clipped geotif
     """
     tif_ds = gdal.Open(tif_in, gdal.GA_ReadOnly)
@@ -209,8 +210,8 @@ def clip_geotif(tif_in, fpath, clip_bounds, suf = "_c.tif"):
     pix_res = float(ext[1])
     tif_out = os.path.join(fpath, tif_name[:-4] + suf)
 
-    cmd = "gdalwarp.exe -cutline \"%s\" -dstnodata -9999. -tr %f %f -overwrite -r bilinear \
-        -crop_to_cutline \"%s\" \"%s\" -co COMPRESS=LZW" %(clip_bounds, pix_res, pix_res, tif_in, tif_out)
+    cmd = "gdalwarp.exe -cutline \"%s\" -dstnodata %d -tr %f %f -overwrite -r bilinear \
+        -crop_to_cutline \"%s\" \"%s\"" %(clip_bounds, no_data, pix_res, pix_res, tif_in, tif_out)
 
     cmd_info = 'gdalinfo.exe -stats \"%s\"'%(tif_out)
 
